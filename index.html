@@ -4,53 +4,45 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Concrete Defender — ConcreteXYZ</title>
-<meta property="og:title" content="Concrete Defender"/>
-<meta property="og:description" content="Protect the vault. Destroy liquidation bots. Earn CONC."/>
+
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  background: #0a0a0a;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 100vh; font-family: monospace;
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+background:#0a0a0a;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+min-height:100vh;
+font-family:monospace;
 }
-#wrap { width: 100%; max-width: 700px; padding: 0.75rem; }
-#hud {
-  display: flex; justify-content: space-between;
-  align-items: center; margin-bottom: 8px;
-  flex-wrap: wrap; gap: 6px;
+#wrap{width:100%;max-width:700px;padding:.75rem}
+#hud{display:flex;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+.hud-stat{font-size:11px;color:#555}
+.hud-stat span{font-size:14px;color:#fff}
+canvas{
+display:block;
+border-radius:12px;
+border:.5px solid #1c1c1c;
+background:#0a0a0a;
+width:100%;
+cursor:none;
 }
-.hud-stat { font-size: 11px; color: #555; }
-.hud-stat span { font-size: 14px; font-weight: 500; color: #fff; }
-canvas {
-  display: block; border-radius: 12px;
-  border: 0.5px solid #1c1c1c; background: #0a0a0a;
-  width: 100%; cursor: none;
-}
-#footer {
-  margin-top: 8px; display: flex;
-  justify-content: space-between; align-items: center;
-  font-size: 10px; color: #333;
-}
-#footer a { color: #F5E98A; text-decoration: none; opacity: 0.6; }
-#footer a:hover { opacity: 1; }
 </style>
 </head>
+
 <body>
 <div id="wrap">
-  <div id="hud">
-    <div class="hud-stat">CONC <span id="scoreEl">0</span></div>
-    <div class="hud-stat">TVL <span id="tvlEl">$902.3M</span></div>
-    <div class="hud-stat">WAVE <span id="waveEl">1</span></div>
-    <div class="hud-stat">CHAIN <span id="chainEl">×1</span></div>
-    <div class="hud-stat">VAULT <span id="livesEl">❤️❤️❤️</span></div>
-    <div class="hud-stat">BEST <span id="bestEl">0</span></div>
-  </div>
-  <canvas id="c"></canvas>
-  <div id="footer">
-    <span>CONCRETE DEFENDER · @ConcreteXYZ</span>
-    <a href="https://concrete.xyz" target="_blank">concrete.xyz ↗</a>
-  </div>
+<div id="hud">
+<div class="hud-stat">CONC <span id="scoreEl">0</span></div>
+<div class="hud-stat">TVL <span id="tvlEl">$902.3M</span></div>
+<div class="hud-stat">WAVE <span id="waveEl">1</span></div>
+<div class="hud-stat">CHAIN <span id="chainEl">×1</span></div>
+<div class="hud-stat">VAULT <span id="livesEl">❤️❤️❤️</span></div>
+<div class="hud-stat">BEST <span id="bestEl">0</span></div>
+</div>
+
+<canvas id="c"></canvas>
 </div>
 
 <script>
@@ -62,44 +54,126 @@ const ctx=canvas.getContext('2d');
 let audioCtx=null;
 
 function unlockAudio(){
-  if(!audioCtx){
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  }
+ if(!audioCtx){
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ }
 }
 
 canvas.addEventListener("mousedown",unlockAudio);
 canvas.addEventListener("touchstart",unlockAudio);
 document.addEventListener("keydown",unlockAudio);
 
-function sound(freq=440,time=0.08,type="square",vol=0.2){
-  if(!audioCtx) return;
-
-  const osc=audioCtx.createOscillator();
-  const gain=audioCtx.createGain();
-
-  osc.type=type;
-  osc.frequency.value=freq;
-
-  gain.gain.value=vol;
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start();
-
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    audioCtx.currentTime+time
-  );
-
-  osc.stop(audioCtx.currentTime+time);
+function sound(freq=440,time=.08,type="square",vol=.2){
+ if(!audioCtx)return;
+ const osc=audioCtx.createOscillator();
+ const gain=audioCtx.createGain();
+ osc.type=type;
+ osc.frequency.value=freq;
+ gain.gain.value=vol;
+ osc.connect(gain);
+ gain.connect(audioCtx.destination);
+ osc.start();
+ gain.gain.exponentialRampToValueAtTime(
+  .0001,
+  audioCtx.currentTime+time
+ );
+ osc.stop(audioCtx.currentTime+time);
 }
 
 /* ================= GAME ================= */
 
 const W=660,H=460;
-canvas.width=W;canvas.height=H;
+canvas.width=W;
+canvas.height=H;
 
-/* (ALL YOUR ORIGINAL CODE SAME BELOW — ONLY SOUND LINES INSERTED) */
+let player={x:W/2,y:H-60,cool:0};
+let bullets=[];
+let enemies=[];
+let score=0;
+let lives=3;
 
-...
+function fire(){
+ if(player.cool>0)return;
+ player.cool=8;
+ sound(700,.05,"square",.15);
+ bullets.push({x:player.x,y:player.y});
+}
+
+function spawnEnemy(){
+ enemies.push({
+  x:Math.random()*W,
+  y:-20,
+  hp:2
+ });
+}
+
+function bomb(){
+ sound(60,.6,"sawtooth",.4);
+ enemies=[];
+}
+
+function update(){
+ ctx.clearRect(0,0,W,H);
+
+ if(Math.random()<.02)spawnEnemy();
+
+ bullets.forEach(b=>b.y-=8);
+ enemies.forEach(e=>e.y+=2);
+
+ bullets.forEach((b,bi)=>{
+  enemies.forEach((e,ei)=>{
+   if(Math.abs(b.x-e.x)<15 && Math.abs(b.y-e.y)<15){
+    sound(400,.04,"triangle",.12);
+    e.hp--;
+    bullets.splice(bi,1);
+    if(e.hp<=0){
+     sound(140,.12,"sawtooth",.25);
+     score+=10;
+     enemies.splice(ei,1);
+    }
+   }
+  });
+ });
+
+ enemies.forEach((e,ei)=>{
+  if(e.y>H){
+   sound(120,.25,"sawtooth",.35);
+   lives--;
+   enemies.splice(ei,1);
+   if(lives<=0){
+    sound(50,1,"sawtooth",.5);
+    alert("GAME OVER score "+score);
+    location.reload();
+   }
+  }
+ });
+
+ ctx.fillStyle="#F5E98A";
+ ctx.fillRect(player.x-20,player.y-20,40,40);
+
+ ctx.fillStyle="white";
+ bullets.forEach(b=>ctx.fillRect(b.x-2,b.y-10,4,10));
+
+ ctx.fillStyle="red";
+ enemies.forEach(e=>ctx.fillRect(e.x-15,e.y-15,30,30));
+
+ player.cool--;
+
+ requestAnimationFrame(update);
+}
+
+canvas.onmousemove=e=>{
+ const r=canvas.getBoundingClientRect();
+ player.x=(e.clientX-r.left)*(W/r.width);
+};
+
+canvas.onmousedown=fire;
+
+document.onkeydown=e=>{
+ if(e.code==="Space")bomb();
+};
+
+update();
+</script>
+</body>
+</html>
