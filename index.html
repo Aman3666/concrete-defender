@@ -1,4 +1,5 @@
-function hitSound(){
+<script>
+  function hitSound(){
   if(!audioCtx) return;
 
   let o=audioCtx.createOscillator();
@@ -35,7 +36,6 @@ function alarmSound(){
   o.start();
   o.stop(audioCtx.currentTime+0.6);
 }
-<script>
 const canvas=document.getElementById('c');
 const ctx=canvas.getContext('2d');
 
