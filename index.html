@@ -12,27 +12,41 @@
   --gold:#f0d060;--gold2:#e8b830;--gold3:#c89420;--gold-dim:rgba(240,208,96,0.12);
   --cyan:#00e8ff;--cyan2:#00b8d4;--cyan-dim:rgba(0,232,255,0.12);
   --purple:#9b6dff;--purple2:#6b3ddf;
-  --red:#ff3d5a;--orange:#ff7730;
-  --green:#4ade80;
-  --navy:#020810;--navy2:#060f1e;
-  --panel:rgba(3,9,20,0.92);
+  --red:#ff3d5a;--orange:#ff7730;--green:#4ade80;
+  --navy:#020810;--panel:rgba(3,9,20,0.94);
   --bg:rgba(240,208,96,0.22);--bc:rgba(0,232,255,0.18);
   --text:#c8dce8;--dim:#4a6a80;
   --fd:'Syne',sans-serif;--fm:'DM Mono',monospace;
+  --panel-w:290px;
 }
-html,body{width:100vw;height:100vh;overflow:hidden;background:var(--navy);font-family:var(--fd);color:var(--text)}
+html,body{width:100vw;height:100%;min-height:100vh;overflow:hidden;background:var(--navy);font-family:var(--fd);color:var(--text);-webkit-tap-highlight-color:transparent}
 canvas{display:block;position:fixed;inset:0;z-index:0}
 body::after{content:'';position:fixed;inset:0;z-index:310;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px)}
 body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
   background:radial-gradient(ellipse at 50% 38%,transparent 42%,rgba(2,8,16,.72) 100%)}
 
-/* ════════════════ LEFT PANEL ════════════════ */
+/* ═══════════ MOBILE DRAWER TOGGLE ═══════════ */
+#menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:400;
+  width:40px;height:40px;border-radius:10px;
+  background:rgba(240,208,96,.12);border:1px solid rgba(240,208,96,.28);
+  cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px;
+  backdrop-filter:blur(12px);transition:background .2s;
+}
+#menu-btn:active{background:rgba(240,208,96,.22)}
+#menu-btn span{display:block;width:18px;height:1.5px;background:var(--gold);border-radius:2px;transition:all .3s}
+#menu-btn.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+#menu-btn.open span:nth-child(2){opacity:0}
+#menu-btn.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+
+/* ═══════════ LEFT PANEL ═══════════ */
 #panel-left{
-  position:fixed;top:0;left:0;bottom:0;width:300px;z-index:200;
-  background:linear-gradient(180deg,rgba(3,9,20,.97) 0%,rgba(2,6,14,.95) 100%);
+  position:fixed;top:0;left:0;bottom:0;width:var(--panel-w);z-index:300;
+  background:linear-gradient(180deg,rgba(3,9,20,.98) 0%,rgba(2,6,14,.97) 100%);
   border-right:1px solid rgba(240,208,96,.14);
   display:flex;flex-direction:column;overflow:hidden;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
 }
 .panel-glow-line{height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),transparent);flex-shrink:0}
 .panel-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 18px 24px;
@@ -43,66 +57,45 @@ body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 /* Brand */
 .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .bc-logo{width:34px;height:34px;background:var(--gold);border-radius:6px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 16px rgba(240,208,96,.35)}
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(240,208,96,.35)}
 .bc-logo span{font-family:Georgia,serif;font-size:19px;font-weight:700;color:#1a1200;letter-spacing:-.5px}
 .brand-name{font-size:17px;font-weight:800;color:var(--gold);letter-spacing:2px;text-transform:uppercase;line-height:1}
 .brand-tag{font-family:var(--fm);font-size:8.5px;color:var(--dim);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:16px}
 
 .div{height:1px;background:linear-gradient(90deg,transparent,rgba(240,208,96,.18),transparent);margin:12px 0}
 
-/* Stats grid */
+/* Stats */
 .sg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
 .sc{background:var(--gold-dim);border:1px solid rgba(240,208,96,.1);border-radius:8px;padding:8px 10px;transition:border-color .3s,background .3s}
-.sc:hover{border-color:rgba(240,208,96,.3);background:rgba(240,208,96,.08)}
+.sc:active{border-color:rgba(240,208,96,.3);background:rgba(240,208,96,.08)}
 .sc.wide{grid-column:1/-1}
 .sc.cyan-card{background:var(--cyan-dim);border-color:rgba(0,232,255,.12)}
 .sc.cyan-card .sv{color:var(--cyan)}
 .sv{font-family:var(--fm);font-size:12.5px;color:var(--gold);font-weight:500;line-height:1}
 .sl{font-size:8.5px;color:var(--dim);margin-top:3px;letter-spacing:.5px;text-transform:uppercase}
 
-/* ════ HOW IT RUNS — Step tracker ════ */
-.flow-title{
-  font-family:var(--fm);font-size:9px;color:var(--dim);
-  letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;
-  display:flex;align-items:center;gap:8px;
-}
+/* Steps */
+.flow-title{font-family:var(--fm);font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .flow-title::after{content:'';flex:1;height:1px;background:rgba(240,208,96,.12)}
 .step-list{display:flex;flex-direction:column;gap:0}
-.step{
-  display:flex;align-items:flex-start;gap:10px;padding:9px 0;
-  border-bottom:1px solid rgba(240,208,96,.06);cursor:pointer;
-  transition:background .2s;border-radius:6px;padding-left:4px;padding-right:4px;
-  position:relative;
-}
+.step{display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(240,208,96,.06);cursor:pointer;transition:background .2s;border-radius:6px;position:relative}
 .step:last-child{border-bottom:none}
-.step:hover{background:rgba(240,208,96,.04)}
+.step:active{background:rgba(240,208,96,.06)}
 .step.active{background:rgba(240,208,96,.07)}
 .step.active .step-num{background:var(--gold);color:#1a1200;box-shadow:0 0 10px rgba(240,208,96,.5)}
 .step.active .step-name{color:var(--gold)}
 .step.active .step-desc{color:var(--text)}
 .step.done .step-num{background:rgba(240,208,96,.15);color:var(--gold)}
-.step-num{
-  width:22px;height:22px;border-radius:50%;flex-shrink:0;margin-top:1px;
-  background:rgba(240,208,96,.06);border:1px solid rgba(240,208,96,.2);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--fm);font-size:9px;color:var(--dim);font-weight:500;
-  transition:all .3s;
-}
+.step-num{width:22px;height:22px;border-radius:50%;flex-shrink:0;margin-top:1px;background:rgba(240,208,96,.06);border:1px solid rgba(240,208,96,.2);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:9px;color:var(--dim);font-weight:500;transition:all .3s}
 .step-body{flex:1}
 .step-name{font-size:11px;font-weight:600;color:var(--dim);transition:color .3s;letter-spacing:.3px;margin-bottom:2px}
 .step-desc{font-family:var(--fm);font-size:9px;color:var(--dim);opacity:.7;line-height:1.5;transition:color .3s}
-.step-tag{
-  display:inline-block;font-family:var(--fm);font-size:8px;
-  padding:2px 6px;border-radius:3px;margin-top:4px;letter-spacing:.5px;text-transform:uppercase;
-}
+.step-tag{display:inline-block;font-family:var(--fm);font-size:8px;padding:2px 6px;border-radius:3px;margin-top:4px;letter-spacing:.5px;text-transform:uppercase}
 .tag-cyan{background:rgba(0,232,255,.1);color:var(--cyan);border:1px solid rgba(0,232,255,.2)}
 .tag-gold{background:rgba(240,208,96,.1);color:var(--gold);border:1px solid rgba(240,208,96,.2)}
 .tag-purple{background:rgba(155,109,255,.1);color:var(--purple);border:1px solid rgba(155,109,255,.2)}
 .tag-red{background:rgba(255,61,90,.1);color:var(--red);border:1px solid rgba(255,61,90,.2)}
 .tag-green{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)}
-
-/* Progress connector between steps */
 .step-connector{width:1px;height:8px;background:rgba(240,208,96,.12);margin-left:14px}
 
 /* Controls */
@@ -120,8 +113,8 @@ body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
 .sh{display:flex;justify-content:space-between;margin-bottom:5px}
 .shl{font-family:var(--fm);font-size:9px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
 .shv{font-family:var(--fm);font-size:9px;color:var(--gold)}
-input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:rgba(240,208,96,.14);border-radius:2px;outline:none;cursor:pointer}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 8px var(--gold)}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:rgba(240,208,96,.14);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 8px var(--gold)}
 
 /* Phase bar */
 #ph{background:rgba(240,208,96,.04);border:1px solid rgba(240,208,96,.1);border-radius:8px;padding:9px 11px}
@@ -130,73 +123,148 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 #ph-f{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold));border-radius:3px;transition:width .5s ease;width:0%}
 #ph-v{font-family:var(--fm);font-size:10px;color:var(--gold);letter-spacing:.5px}
 
-/* ════════════════ RIGHT PANEL ════════════════ */
+/* ═══════════ RIGHT PANEL ═══════════ */
 #panel-right{
-  position:fixed;top:20px;right:20px;width:220px;z-index:200;
-  display:flex;flex-direction:column;gap:10px;
+  position:fixed;top:14px;right:14px;width:210px;z-index:200;
+  display:flex;flex-direction:column;gap:8px;
+  transition:opacity .3s,transform .3s;
 }
-.r-card{
-  background:rgba(3,9,20,.88);border:1px solid rgba(240,208,96,.14);
-  border-radius:10px;padding:12px 14px;backdrop-filter:blur(18px);
-  box-shadow:0 0 30px rgba(240,208,96,.05);
-}
+.r-card{background:rgba(3,9,20,.9);border:1px solid rgba(240,208,96,.14);border-radius:10px;padding:11px 13px;backdrop-filter:blur(18px);box-shadow:0 0 30px rgba(240,208,96,.05)}
 .r-card.cyan-border{border-color:rgba(0,232,255,.18)}
 .live-row{display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:9px;color:rgba(240,208,96,.5);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .ld{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold);animation:lp 1.4s ease-in-out infinite}
 @keyframes lp{0%,100%{opacity:1}50%{opacity:.15}}
 .ld.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
-#tvl-live{font-family:var(--fm);font-size:20px;font-weight:500;color:var(--gold);letter-spacing:.5px;line-height:1}
+#tvl-live{font-family:var(--fm);font-size:19px;font-weight:500;color:var(--gold);letter-spacing:.5px;line-height:1}
 #tvl-sub{font-family:var(--fm);font-size:8px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
-
-/* Mini chart */
-#mini-chart{height:36px;position:relative;margin-top:8px}
+#mini-chart{height:32px;position:relative;margin-top:6px}
 #mini-chart canvas{width:100%!important;height:100%!important}
-
-/* Event log */
-#event-log{max-height:120px;overflow-y:auto;scrollbar-width:none}
+#event-log{max-height:90px;overflow-y:auto;scrollbar-width:none}
 #event-log::-webkit-scrollbar{display:none}
-.ev-row{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid rgba(240,208,96,.05);font-family:var(--fm);font-size:8.5px}
+.ev-row{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:1px solid rgba(240,208,96,.05);font-family:var(--fm);font-size:8px}
 .ev-row:last-child{border-bottom:none}
-.ev-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.ev-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:2px}
 .ev-text{color:var(--dim);line-height:1.4}
 .ev-text span{color:var(--text)}
 
-/* ════════════════ BOTTOM LEGEND ════════════════ */
-#leg{position:fixed;bottom:18px;left:320px;right:250px;z-index:200;
-  display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
-.li{display:flex;align-items:center;gap:5px;font-family:var(--fm);font-size:8.5px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
-.ld2{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-
-/* ════════════════ STATUS ════════════════ */
-#status{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:200;
-  font-family:var(--fm);font-size:8px;color:rgba(0,232,255,.22);
-  letter-spacing:2px;text-transform:uppercase;white-space:nowrap;pointer-events:none}
-
-/* Flash + tooltip */
-#flash{position:fixed;inset:0;z-index:260;pointer-events:none;
-  background:radial-gradient(ellipse at center,rgba(240,208,96,.18) 0%,transparent 65%);opacity:0;transition:opacity .15s}
-#tooltip{position:fixed;z-index:230;pointer-events:none;
-  background:rgba(3,9,20,.94);border:1px solid var(--bg);border-radius:8px;
-  padding:8px 12px;font-family:var(--fm);font-size:9.5px;color:var(--gold);
-  letter-spacing:.5px;backdrop-filter:blur(14px);opacity:0;transition:opacity .2s;white-space:nowrap}
-
-/* Flywheel label overlay */
-#flywheel-label{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:150;pointer-events:none;text-align:center;
+/* ═══════════ BOTTOM HUD ═══════════ */
+#bottom-hud{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px 10px;
+  background:linear-gradient(0deg,rgba(2,8,16,.9) 0%,transparent 100%);
+  pointer-events:none;
 }
-#flywheel-label .fl-title{font-size:9px;font-family:var(--fm);color:rgba(240,208,96,.3);letter-spacing:3px;text-transform:uppercase}
+#leg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;pointer-events:none}
+.li{display:flex;align-items:center;gap:4px;font-family:var(--fm);font-size:7.5px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
+.ld2{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+#status{font-family:var(--fm);font-size:7.5px;color:rgba(0,232,255,.2);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+
+/* ═══════════ MOBILE STEP STRIP (bottom pill) ═══════════ */
+#step-strip{
+  display:none;position:fixed;bottom:52px;left:50%;transform:translateX(-50%);
+  z-index:250;background:rgba(3,9,20,.92);border:1px solid rgba(240,208,96,.2);
+  border-radius:24px;padding:6px 12px;backdrop-filter:blur(16px);
+  display:none;align-items:center;gap:8px;
+}
+#step-strip-txt{font-family:var(--fm);font-size:10px;color:var(--gold);letter-spacing:.5px;white-space:nowrap}
+#step-strip-num{font-family:var(--fm);font-size:9px;color:var(--dim)}
+
+/* ═══════════ OVERLAY (mobile drawer backdrop) ═══════════ */
+#overlay{
+  display:none;position:fixed;inset:0;z-index:290;
+  background:rgba(2,8,16,.6);backdrop-filter:blur(2px);
+  opacity:0;transition:opacity .3s;
+}
+#overlay.show{opacity:1}
+
+/* ═══════════ FLASH + TOOLTIP ═══════════ */
+#flash{position:fixed;inset:0;z-index:260;pointer-events:none;background:radial-gradient(ellipse at center,rgba(240,208,96,.18) 0%,transparent 65%);opacity:0;transition:opacity .15s}
+#tooltip{position:fixed;z-index:230;pointer-events:none;background:rgba(3,9,20,.94);border:1px solid var(--bg);border-radius:8px;padding:7px 11px;font-family:var(--fm);font-size:9px;color:var(--gold);letter-spacing:.5px;backdrop-filter:blur(14px);opacity:0;transition:opacity .2s;white-space:nowrap;max-width:200px;white-space:normal}
 
 /* Corners */
-.orn{position:fixed;width:22px;height:22px;z-index:200;pointer-events:none;opacity:.25}
-.orn-tr{top:7px;right:248px;border-top:1.5px solid var(--gold);border-right:1.5px solid var(--gold)}
+.orn{position:fixed;width:20px;height:20px;z-index:200;pointer-events:none;opacity:.2}
+.orn-tr{top:7px;right:235px;border-top:1.5px solid var(--gold);border-right:1.5px solid var(--gold)}
 .orn-br{bottom:7px;right:7px;border-bottom:1.5px solid var(--gold);border-right:1.5px solid var(--gold)}
-.orn-bl{bottom:7px;left:307px;border-bottom:1.5px solid var(--gold);border-left:1.5px solid var(--gold)}
+
+/* ═══════════════════════════════════════
+   MOBILE BREAKPOINT  (≤ 768px)
+═══════════════════════════════════════ */
+@media (max-width:768px){
+  :root{--panel-w:min(88vw,320px)}
+
+  #menu-btn{display:flex}
+
+  /* Panel slides off-screen by default */
+  #panel-left{
+    transform:translateX(calc(-1 * var(--panel-w) - 4px));
+    box-shadow:4px 0 40px rgba(0,0,0,.6);
+  }
+  #panel-left.open{transform:translateX(0)}
+
+  /* Overlay shown when panel open */
+  #overlay{display:block}
+
+  /* Right panel: compact, top-right but smaller */
+  #panel-right{
+    top:14px;right:14px;width:150px;gap:6px;
+  }
+  #panel-right .r-card:nth-child(2),
+  #panel-right .r-card:nth-child(3){display:none}
+  #tvl-live{font-size:14px}
+  #tvl-sub{display:none}
+  #mini-chart{height:24px}
+
+  /* Bottom HUD simplified */
+  #leg{gap:8px}
+  .li{font-size:7px}
+  #status{display:none}
+
+  /* Show step strip */
+  #step-strip{display:flex}
+
+  /* Corners hidden on mobile */
+  .orn{display:none}
+}
+
+/* ═══════════════════════════════════════
+   TABLET  (769px–1024px)
+═══════════════════════════════════════ */
+@media (min-width:769px) and (max-width:1024px){
+  :root{--panel-w:260px}
+  #panel-right{width:180px}
+  #tvl-live{font-size:16px}
+  #panel-right .r-card:nth-child(3){display:none}
+  #menu-btn{display:none}
+  #overlay{display:none!important}
+}
+
+/* ═══════════════════════════════════════
+   LARGE DESKTOP  (≥ 1400px)
+═══════════════════════════════════════ */
+@media (min-width:1400px){
+  :root{--panel-w:310px}
+  #panel-right{width:230px}
+}
+
+<script>
+// Fix 100vh on mobile browsers
+function setVH(){document.documentElement.style.setProperty('--vh',window.innerHeight*.01+'px');}
+setVH();window.addEventListener('resize',setVH);
+</script>
 </style>
 </head>
 <body>
 
 <!-- LEFT PANEL -->
+<!-- MOBILE MENU BUTTON -->
+<button id="menu-btn" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- MOBILE OVERLAY -->
+<div id="overlay"></div>
+
 <div id="panel-left">
   <div class="panel-glow-line"></div>
   <div class="panel-scroll">
@@ -366,37 +434,64 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 </div>
 
 <!-- LEGEND -->
-<div id="leg">
-  <div class="li"><div class="ld2" style="background:#00e8ff;box-shadow:0 0 5px #00e8ff"></div>Yield Flow</div>
-  <div class="li"><div class="ld2" style="background:#f0d060;box-shadow:0 0 5px #f0d060"></div>Rewards</div>
-  <div class="li"><div class="ld2" style="background:#9b6dff;box-shadow:0 0 5px #9b6dff"></div>Emissions</div>
-  <div class="li"><div class="ld2" style="background:#ff3d5a;box-shadow:0 0 5px #ff3d5a"></div>Risk / Liq.</div>
-  <div class="li"><div class="ld2" style="background:#ff7730;box-shadow:0 0 5px #ff7730"></div>Manual DeFi</div>
-  <div class="li"><div class="ld2" style="background:#4ade80;box-shadow:0 0 5px #4ade80"></div>Compounding</div>
+<!-- BOTTOM HUD -->
+<div id="bottom-hud">
+  <div id="leg">
+    <div class="li"><div class="ld2" style="background:#00e8ff;box-shadow:0 0 4px #00e8ff"></div>Yield</div>
+    <div class="li"><div class="ld2" style="background:#f0d060;box-shadow:0 0 4px #f0d060"></div>Rewards</div>
+    <div class="li"><div class="ld2" style="background:#9b6dff;box-shadow:0 0 4px #9b6dff"></div>Emissions</div>
+    <div class="li"><div class="ld2" style="background:#ff3d5a;box-shadow:0 0 4px #ff3d5a"></div>Risk</div>
+    <div class="li"><div class="ld2" style="background:#4ade80;box-shadow:0 0 4px #4ade80"></div>Harvest</div>
+  </div>
+  <div id="status">DRAG · SCROLL · TAP MODULE</div>
 </div>
 
-<div id="status">DRAG TO ORBIT · SCROLL TO ZOOM · CLICK MODULE TO FOCUS · DOUBLE-CLICK TO RESET</div>
+<!-- MOBILE STEP STRIP -->
+<div id="step-strip">
+  <div id="step-strip-num">1/6</div>
+  <div id="step-strip-txt">USER DEPOSITS</div>
+</div>
+
 <div id="flash"></div>
 <div id="tooltip"></div>
 <div class="orn orn-tr"></div>
 <div class="orn orn-br"></div>
-<div class="orn orn-bl"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
 //  CONCRETE DEFI ENGINE — Enhanced Visualization
 //  "How It Runs" — 6-Step Flywheel with Narrative Flow
+//  Responsive: Mobile + Tablet + Desktop
 // ═══════════════════════════════════════════════════════════
 
+// Forward declare closePanel so step listeners can call it
+function closePanel(){
+  const pl=document.getElementById('panel-left');
+  const ov=document.getElementById('overlay');
+  const mb=document.getElementById('menu-btn');
+  if(pl) pl.classList.remove('open');
+  if(ov) ov.classList.remove('show');
+  if(mb) mb.classList.remove('open');
+}
+
 const W = innerWidth, H = innerHeight;
+const isMobile = () => window.innerWidth <= 768;
+const isTablet = () => window.innerWidth > 768 && window.innerWidth <= 1024;
+
+// Responsive camera radius
+function baseCamR() {
+  if (isMobile()) return 22;
+  if (isTablet()) return 18;
+  return 16;
+}
 
 const S = {
   liq:0.7, risk:0.5, speed:1.0,
   showProt:true, showDefi:true, showLabels:true,
   autoRotate:true,
-  camTheta:0.45, camPhi:0.30, camR:16,
-  mouse:{down:false,lx:0,ly:0},
+  camTheta:0.45, camPhi:isMobile()?0.38:0.30, camR:baseCamR(),
+  mouse:{down:false,lx:0,ly:0,dist:0},
   focusTarget:new THREE.Vector3(),
   focusLerp:0,
   protActive:false, protFired:false,
@@ -411,9 +506,11 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(W,H);
 renderer.setClearColor(0x020810,1);
 document.body.insertBefore(renderer.domElement, document.getElementById('panel-left'));
+// On desktop, panel is always visible and 3D scene fills full viewport (panel overlays)
+// On mobile, panel slides in over canvas
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x020810, 0.020);
+scene.fog = new THREE.FogExp2(0x020810, isMobile()?0.028:0.020);
 
 const camera = new THREE.PerspectiveCamera(48, W/H, 0.01, 200);
 camera.position.set(0,4,16);
@@ -814,7 +911,7 @@ pathDefs.forEach(({pts,col,step})=>{
 });
 
 // Flow particles
-const FLOW_N=500;
+const FLOW_N=isMobile()?220:500;
 const fPos=new Float32Array(FLOW_N*3), fProg=new Float32Array(FLOW_N);
 const fLane=new Uint8Array(FLOW_N), fCol=new Float32Array(FLOW_N*3);
 for(let i=0;i<FLOW_N;i++){
@@ -966,6 +1063,8 @@ const stepDefs=[
   {focus:new THREE.Vector3(0,0,0),    phase:'FLYWHEEL RESTART ↺',pct:100},
 ];
 
+const stepNames=['USER DEPOSITS','STRATEGY ROUTING','CROSS-CHAIN DEPLOY','PROTECTION GUARD','YIELD HARVEST','FLYWHEEL ↺'];
+
 function setStep(idx){
   S.currentStep=idx;
   document.querySelectorAll('.step').forEach((el,i)=>{
@@ -980,16 +1079,28 @@ function setStep(idx){
   pathCurves.forEach(({mat,step})=>{
     mat.opacity=step===idx ? .55 : .22;
   });
+  // Update mobile step strip
+  const sn=document.getElementById('step-strip-num');
+  const st=document.getElementById('step-strip-txt');
+  if(sn) sn.textContent=(idx+1)+'/6';
+  if(st) st.textContent=stepNames[idx]||'';
+  // Auto-scroll step into view on mobile
+  if(isMobile()){
+    const activeStep=document.querySelector('.step.active');
+    if(activeStep) activeStep.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
 }
 setStep(0);
 
-// Step click
+// Step click / tap
 document.querySelectorAll('.step').forEach((el,i)=>{
   el.addEventListener('click',()=>{
     S.stepTimer=0; setStep(i);
     const sf=stepDefs[i].focus;
     S.focusTarget.copy(sf);
-    S.camR=Math.max(9,S.camR*.85);
+    S.camR=Math.max(isMobile()?12:9, S.camR*.85);
+    // Close panel on mobile after selecting step
+    if(isMobile()) closePanel();
   });
 });
 
@@ -1000,47 +1111,83 @@ const cvs=renderer.domElement;
 const ray=new THREE.Raycaster();
 const mNDC=new THREE.Vector2();
 
-cvs.addEventListener('mousedown',e=>{S.mouse.down=true;S.mouse.lx=e.clientX;S.mouse.ly=e.clientY;S.autoRotate=false});
-cvs.addEventListener('mousemove',e=>{
-  if(S.mouse.down){
-    S.camTheta-=(e.clientX-S.mouse.lx)*.007;
-    S.camPhi=Math.max(.06,Math.min(1.38,S.camPhi+(e.clientY-S.mouse.ly)*.007));
-    S.mouse.lx=e.clientX;S.mouse.ly=e.clientY;
-  }
-  mNDC.x=(e.clientX/W)*2-1; mNDC.y=-(e.clientY/H)*2+1;
+// ── Pointer (mouse + touch unified) ──
+const mods=[
+  {g:coreGrp,n:'Concrete Core',d:'Protocol settlement & routing hub'},
+  {g:vaultGrp,n:'Earn Vault',d:'Auto-compounding multi-strategy vault'},
+  {g:borrowGrp,n:'Borrow Router',d:'Cross-chain rate optimization engine'},
+  {g:protGrp,n:'Protection Engine',d:'3-tranche liquidation prevention'},
+  {g:harvestGrp,n:'Yield Harvest',d:'Auto-compound + emissions distributor'},
+];
+
+function pointerDown(x,y){S.mouse.down=true;S.mouse.lx=x;S.mouse.ly=y;S.autoRotate=false;}
+function pointerMove(x,y){
+  if(!S.mouse.down)return;
+  S.camTheta-=(x-S.mouse.lx)*.007;
+  S.camPhi=Math.max(.06,Math.min(1.38,S.camPhi+(y-S.mouse.ly)*.007));
+  S.mouse.lx=x;S.mouse.ly=y;
+}
+function pointerUp(){S.mouse.down=false;}
+
+function checkHover(x,y){
+  mNDC.x=(x/innerWidth)*2-1;mNDC.y=-(y/innerHeight)*2+1;
   ray.setFromCamera(mNDC,camera);
-  const moduleObjs=[vaultGrp,borrowGrp,protGrp,harvestGrp,coreGrp].map(g=>g.children[0]).filter(Boolean);
-  const hits=ray.intersectObjects(moduleObjs,true);
+  const hits=ray.intersectObjects(scene.children,true);
   const tip=document.getElementById('tooltip');
   if(hits.length){
-    const mods=[
-      {g:coreGrp,n:'Concrete Core',d:'Protocol settlement & routing hub'},
-      {g:vaultGrp,n:'Earn Vault',d:'Auto-compounding multi-strategy vault'},
-      {g:borrowGrp,n:'Borrow Router',d:'Cross-chain rate optimization engine'},
-      {g:protGrp,n:'Protection Engine',d:'3-tranche liquidation prevention'},
-      {g:harvestGrp,n:'Yield Harvest',d:'Auto-compound + emissions distributor'},
-    ];
     let found; const obj=hits[0].object;
     mods.forEach(m=>{let o=obj;while(o){if(o===m.g){found=m;break;}o=o.parent;}});
-    if(found){tip.textContent=`${found.n} · ${found.d}`;tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-12)+'px';tip.style.opacity='1';}
-  } else tip.style.opacity='0';
-});
-cvs.addEventListener('mouseup',()=>S.mouse.down=false);
-cvs.addEventListener('wheel',e=>{S.camR=Math.max(5,Math.min(28,S.camR+e.deltaY*.013));},{passive:true});
-cvs.addEventListener('dblclick',()=>{S.autoRotate=!S.autoRotate;S.focusTarget.set(0,0,0);});
-cvs.addEventListener('click',e=>{
-  mNDC.x=(e.clientX/W)*2-1; mNDC.y=-(e.clientY/H)*2+1;
+    if(found){
+      tip.textContent=found.n+' · '+found.d;
+      const tx=Math.min(x+14,innerWidth-220),ty=Math.max(y-12,8);
+      tip.style.left=tx+'px';tip.style.top=ty+'px';tip.style.opacity='1';return;
+    }
+  }
+  tip.style.opacity='0';
+}
+
+function checkTap(x,y){
+  mNDC.x=(x/innerWidth)*2-1;mNDC.y=-(y/innerHeight)*2+1;
   ray.setFromCamera(mNDC,camera);
   const hits=ray.intersectObjects(scene.children,true);
   if(hits.length){
     [[coreGrp,0],[vaultGrp,1],[borrowGrp,2],[protGrp,3],[harvestGrp,4]].forEach(([g,si])=>{
-      let o=hits[0].object;while(o){if(o===g){S.focusTarget.lerp(g.position,.5);S.camR=9;setStep(si);S.stepTimer=0;break;}o=o.parent;}
+      let o=hits[0].object;while(o){if(o===g){S.focusTarget.lerp(g.position,.5);S.camR=isMobile()?13:9;setStep(si);S.stepTimer=0;break;}o=o.parent;}
     });
   }
-});
-cvs.addEventListener('touchstart',e=>{S.mouse.down=true;S.mouse.lx=e.touches[0].clientX;S.mouse.ly=e.touches[0].clientY;S.autoRotate=false;},{passive:true});
-cvs.addEventListener('touchmove',e=>{if(!S.mouse.down)return;S.camTheta-=(e.touches[0].clientX-S.mouse.lx)*.007;S.camPhi=Math.max(.06,Math.min(1.38,S.camPhi+(e.touches[0].clientY-S.mouse.ly)*.007));S.mouse.lx=e.touches[0].clientX;S.mouse.ly=e.touches[0].clientY;},{passive:true});
-cvs.addEventListener('touchend',()=>S.mouse.down=false,{passive:true});
+}
+
+// Mouse events
+let _tapX=0,_tapY=0;
+cvs.addEventListener('mousedown',e=>{pointerDown(e.clientX,e.clientY);_tapX=e.clientX;_tapY=e.clientY;});
+cvs.addEventListener('mousemove',e=>{pointerMove(e.clientX,e.clientY);if(!isMobile())checkHover(e.clientX,e.clientY);});
+cvs.addEventListener('mouseup',e=>{if(Math.hypot(e.clientX-_tapX,e.clientY-_tapY)<8)checkTap(e.clientX,e.clientY);pointerUp();});
+cvs.addEventListener('wheel',e=>{S.camR=Math.max(isMobile()?8:5,Math.min(30,S.camR+e.deltaY*.013));},{passive:true});
+cvs.addEventListener('dblclick',()=>{S.autoRotate=!S.autoRotate;S.focusTarget.set(0,0,0);});
+
+// Touch events (with pinch zoom)
+let _t0x=0,_t0y=0,_pinchDist=0;
+cvs.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){
+    pointerDown(e.touches[0].clientX,e.touches[0].clientY);
+    _t0x=e.touches[0].clientX;_t0y=e.touches[0].clientY;
+  } else if(e.touches.length===2){
+    _pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    S.mouse.down=false;
+  }
+},{passive:true});
+cvs.addEventListener('touchmove',e=>{
+  if(e.touches.length===1){pointerMove(e.touches[0].clientX,e.touches[0].clientY);}
+  else if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    S.camR=Math.max(8,Math.min(30,S.camR+(_pinchDist-d)*.04));_pinchDist=d;
+  }
+},{passive:true});
+cvs.addEventListener('touchend',e=>{
+  const cx=e.changedTouches[0].clientX,cy=e.changedTouches[0].clientY;
+  if(Math.hypot(cx-_t0x,cy-_t0y)<14)checkTap(cx,cy);
+  pointerUp();
+},{passive:true});
 
 document.getElementById('tog-prot').addEventListener('change',e=>S.showProt=e.target.checked);
 document.getElementById('tog-defi').addEventListener('change',e=>{S.showDefi=e.target.checked;defiGrp.visible=e.target.checked;});
@@ -1230,7 +1377,35 @@ window.addEventListener('resize',()=>{
   const W=innerWidth,H=innerHeight;
   renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix();
   drawMiniChart();
+  // Adjust camera range on orientation change
+  if(!S.mouse.down) S.camR=Math.max(S.camR, baseCamR());
 });
+
+// ── Mobile menu button ──
+const menuBtn=document.getElementById('menu-btn');
+const panelLeft=document.getElementById('panel-left');
+const overlay=document.getElementById('overlay');
+
+function openPanel(){
+  panelLeft.classList.add('open');
+  overlay.classList.add('show');
+  menuBtn.classList.add('open');
+}
+function closePanel(){
+  panelLeft.classList.remove('open');
+  overlay.classList.remove('show');
+  menuBtn.classList.remove('open');
+}
+if(menuBtn){
+  menuBtn.addEventListener('click',e=>{
+    e.stopPropagation();
+    panelLeft.classList.contains('open')?closePanel():openPanel();
+  });
+}
+if(overlay) overlay.addEventListener('click',closePanel);
+
+// Auto-open panel on desktop
+if(!isMobile()&&!isTablet()) panelLeft.classList.add('open');
 </script>
 </body>
 </html>
