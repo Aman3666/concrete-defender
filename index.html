@@ -172,8 +172,22 @@ h2 { font-size:9px; font-weight:900; letter-spacing:0.16em; color:#00d4ff;
        z-index:200; max-width:440px; text-align:center; display:none; }
 #tip strong { color:#00d4ff; font-size:10.5px; display:block; margin-bottom:3px; }
 
-/* drag hint badge */
-#drag-hint {
+/* hide labels button */
+#btn-labels {
+  position:fixed; top:18px; left:50%; transform:translateX(-50%);
+  background:rgba(2,8,22,0.92); border:1px solid rgba(0,200,255,0.35);
+  border-radius:20px; padding:6px 18px; z-index:200; cursor:pointer;
+  font-size:9px; color:#00d4ff; letter-spacing:0.13em; font-family:'Courier New',monospace;
+  text-transform:uppercase; white-space:nowrap; transition:background 0.2s, color 0.2s;
+  display:flex; align-items:center; gap:7px;
+}
+#btn-labels:hover { background:rgba(0,180,255,0.2); }
+#btn-labels .kbd { background:rgba(0,180,255,0.2); border:1px solid rgba(0,200,255,0.4);
+  border-radius:3px; padding:1px 5px; font-size:8px; color:#00ffcc; }
+#btn-labels.hidden-mode { background:rgba(255,80,80,0.15); border-color:rgba(255,80,80,0.4); color:#ff8080; }
+/* labels hidden state */
+.lbl.lbl-off { opacity:0 !important; pointer-events:none; }
+
   position:fixed; top:18px; left:50%; transform:translateX(-50%);
   background:rgba(0,180,255,0.15); border:1px solid rgba(0,200,255,0.35);
   border-radius:20px; padding:5px 16px;
@@ -280,7 +294,11 @@ h2 { font-size:9px; font-weight:900; letter-spacing:0.16em; color:#00d4ff;
 </div>
 
 <div id="txb"><div class="tl">Transactions Processed</div><div class="tv" id="txn">0</div></div>
-<div id="bar">Left-click drag block to MOVE &nbsp;|&nbsp; Right-click drag to ORBIT &nbsp;|&nbsp; Scroll to ZOOM</div>
+<div id="bar">Left-drag = MOVE block &nbsp;|&nbsp; Right-drag = ORBIT &nbsp;|&nbsp; Scroll = ZOOM &nbsp;|&nbsp; H = Labels &nbsp;|&nbsp; R = Reset &nbsp;|&nbsp; Click block = Details</div>
+<div id="btn-labels" onclick="toggleLabels()">
+  <span id="lbl-btn-text">&#128065; Hide All Labels</span>
+  <span class="kbd">H</span>
+</div>
 <div id="tip"></div>
 <div id="drag-hint">Click &amp; drag any glowing block to move it</div>
 
@@ -697,29 +715,120 @@ function highlightMesh(mesh, on) {
 // ─── SHOW INSPECT TIP ─────────────────────────────────────────────────────────
 var tipEl = document.getElementById('tip');
 var inspDesc = {
-  'Payment Operator':         'Creates USDT stablecoin transactions. Each green packet flying left-to-right originates here.',
-  'UTEXO Engine Layer':       'One of 4 processing layers: Routing → Liquidity → Execution → Settlement Coordination.',
-  'Execution Crystal':        'Atomic execution core. Validates all state transitions. No partial fills, no race conditions.',
-  'UTEXO Settlement Engine':  '4-layer off-chain processor. Executes RGB asset transfers and batches Bitcoin commitments.',
-  'Bitcoin Settlement Monolith': 'Ultimate source of truth. SHA-256 commitment hashes anchored here permanently.',
-  'API Abstraction Layer':    'One SDK beam connects wallets, exchanges and gateways. No blockchain code needed.',
-  'Routing Node ':            'Evaluates live channel liquidity and routes the payment packet through the fastest path.',
+  'Payment Operator':
+    'ROLE: Merchant, wallet or fintech server. WORK: Constructs and signs a USDT transfer instruction, assigns a payment ID, and injects the signed packet into the Lightning channel. Acts as the entry gate into the UTEXO network.',
+  'Execution Crystal':
+    'ROLE: Atomic execution core of UTEXO. WORK: Receives validated transfer requests, applies a cryptographic state transition — atomically debiting the sender balance and crediting the receiver in the RGB contract state. Guarantees no partial fills and no double-spend. If validation fails, the entire operation is rolled back instantly.',
+  'UTEXO Settlement Engine':
+    'ROLE: Central off-chain processor. WORK: Orchestrates all 4 layers — receives Lightning packets, validates asset state via RGB, executes atomic transfers in the Execution Crystal, and batches finalized state changes into a SHA-256 commitment hash for Bitcoin anchoring. Handles thousands of TXs per second without touching the public blockchain.',
+  'API Abstraction Layer':
+    'ROLE: Developer integration gateway. WORK: Exposes a single REST/SDK API that wallets, exchanges and payment gateways connect to. Translates standard payment calls into UTEXO-native Lightning + RGB operations. Developers write zero blockchain code.',
+  'Routing Node 1':
+    'ROUTING NODE 1 — Channel Scout. WORK: Scans all available Lightning channels from the Payment Operator. Measures real-time liquidity depth, latency and fee cost on each path. Discards paths with insufficient capacity and forwards the top candidates downstream.',
+  'Routing Node 2':
+    'ROUTING NODE 2 — Path Scorer. WORK: Scores candidate paths using a weighted algorithm (liquidity weight 40%, latency 35%, fee 25%). Selects the single best route and locks a micro-reservation on that channel to prevent race conditions.',
+  'Routing Node 3':
+    'ROUTING NODE 3 — Packet Forwarder. WORK: Receives the payment packet and HTLC (Hash Time Locked Contract) from the previous node. Verifies the HTLC hash matches the payment preimage, decrements its local channel balance, and forwards the packet to the next hop within 50ms.',
+  'Routing Node 4':
+    'ROUTING NODE 4 — Mid-Path Relay. WORK: Acts as a liquidity bridge between two channel segments with different capacities. Rebalances its local channel state using circular payments if needed to maintain routing availability for future transactions.',
+  'Routing Node 5':
+    'ROUTING NODE 5 — Congestion Guard. WORK: Monitors the downstream channel for congestion signals. If the next hop is saturated, it triggers a dynamic re-route back upstream to Routing Node 2 to select the next-best path. Prevents packet loss under load.',
+  'Routing Node 6':
+    'ROUTING NODE 6 — UTEXO Gateway. WORK: Final Lightning hop before the UTEXO engine. Validates the HTLC preimage against the payment hash, settles the channel update, and delivers the decoded payment instruction to the UTEXO Routing Layer for engine processing.',
+  'Routing Node 7':
+    'ROUTING NODE 7 — Confirmation Relay. WORK: After UTEXO processes the payment, this node propagates the HTLC settlement signal back through the channel chain to release locked liquidity at every prior hop, completing the full circular settlement of the Lightning channel state.',
+  'UTEXO Engine Layer':
+    'UTEXO PROCESSING LAYER. WORK: One of 4 stacked processing stages inside the engine. Each layer transforms the payment packet — from raw routing data at the bottom, through liquidity validation, atomic execution, and finally commitment packaging at the top. Particles flowing through each layer represent live transaction data being processed.',
 };
 
-function showTip(drag) {
-  var desc = inspDesc[drag.label] || inspDesc[drag.label.replace(/\d+$/, '')];
-  if (!desc) return;
-  tipEl.innerHTML='<strong>'+drag.label+'</strong>'+(desc||'');
-  tipEl.style.display='block';
-  clearTimeout(tipEl._t); tipEl._t=setTimeout(function(){ tipEl.style.display='none'; }, 5000);
-}
+// Bitcoin block detailed work descriptions
+var btcBlockWork = [
+  'BTC BLOCK 1 — Genesis Anchor. WORK: The oldest commitment block in this batch. Contains the Merkle root of all UTEXO state transitions from the very first settlement epoch. Every subsequent block references this one, creating a tamper-proof chain back to origin. Stored permanently in Bitcoin block height ~870,000.',
+  'BTC BLOCK 2 — State Snapshot. WORK: Captures a SHA-256 commitment hash of all RGB asset balances at a specific point in time. Acts as a checkpoint — if any off-chain participant disputes a balance, this block is referenced as the canonical truth. Cannot be altered without redoing all subsequent Bitcoin proof-of-work.',
+  'BTC BLOCK 3 — Batch Seal #3. WORK: Seals a batch of ~2,400 UTEXO transactions into a single 32-byte hash committed to Bitcoin. This means 2,400 payments are secured by full Bitcoin mining power at the cost of one tiny OP_RETURN transaction. Maximum efficiency anchoring.',
+  'BTC BLOCK 4 — Mid-Chain Anchor. WORK: Periodic anchor block that resets the commitment accumulator. After this block, a new batch starts collecting. Prevents commitment chains from growing too long. Also serves as a synchronization point for all UTEXO nodes to agree on current state.',
+  'BTC BLOCK 5 — Dispute Evidence Block. WORK: Contains commitments used specifically for dispute resolution. If a counterparty claims a different balance, the UTEXO node broadcasts this block\'s pre-image to prove the correct state. Bitcoin miners have already validated this proof — it is irrefutable.',
+  'BTC BLOCK 6 — High-Value Anchor. WORK: Anchors settlement for transactions above a configurable threshold (e.g. >$10,000 USDT). Large transfers get their own dedicated commitment block for extra auditability and regulatory compliance. Provides an on-chain audit trail for institutional users.',
+  'BTC BLOCK 7 — Latest Finality. WORK: The most recent Bitcoin commitment from UTEXO. Contains the current state root of all active RGB contracts and channel balances. Once this block is 6 confirmations deep in Bitcoin, all UTEXO settlements it covers achieve absolute, irreversible finality.',
+];
 
-// for 'Bitcoin Block #N' partial match
 for (var i=0; i<draggables.length; i++) {
-  if (draggables[i].label.indexOf('Bitcoin Block')===0) {
-    inspDesc[draggables[i].label] = 'Individual Bitcoin block. Drag to inspect. Each block seals a batch of off-chain UTEXO commitments permanently.';
+  var lbl = draggables[i].label;
+  if (lbl.indexOf('Bitcoin Block')===0) {
+    var bNum = parseInt(lbl.replace('Bitcoin Block #','')) - 1;
+    if (bNum >= 0 && bNum < btcBlockWork.length) {
+      inspDesc[lbl] = btcBlockWork[bNum];
+    }
   }
 }
+
+// UTEXO layer-specific descriptions
+var layerWork = [
+  'ROUTING LAYER (Bottom). WORK: Receives raw payment instructions from the Lightning Gateway Node. Parses the HTLC data, extracts the destination address and amount, validates the payment hash, and dispatches the job to the Liquidity Layer queue. Processes ~8,000 routing decisions per second.',
+  'LIQUIDITY LAYER (2nd). WORK: Checks whether the RGB asset channel between sender and receiver has sufficient confirmed balance. If balance is low, triggers an automatic rebalancing sub-routine. Calculates the precise debit/credit amounts including fixed UTEXO fee. Approves or rejects the transfer before it reaches execution.',
+  'EXECUTION LAYER (3rd). WORK: Performs the actual atomic state transition. Updates the sender\'s RGB contract balance (debit), updates the receiver\'s RGB contract balance (credit), and records the transfer in the local state accumulator. The entire operation is wrapped in an atomic lock — either both updates succeed or neither does.',
+  'SETTLEMENT COORDINATION (Top). WORK: Collects all completed transfers from the Execution Layer into a Merkle tree. Computes the root hash (SHA-256) of the accumulated state changes. Packages it as a Bitcoin OP_RETURN payload and fires the Commitment Beam to the Bitcoin Monolith every ~3 seconds.',
+];
+
+for (var i=0; i<layerMeshes.length; i++) {
+  inspDesc['UTEXO Layer ' + i] = layerWork[i];
+  // re-register draggable with unique label for each layer
+  for (var j=0; j<draggables.length; j++) {
+    if (draggables[j].mesh === layerMeshes[i]) {
+      draggables[j].label = 'UTEXO Layer ' + i;
+    }
+  }
+}
+
+function showTip(drag) {
+  var desc = inspDesc[drag.label];
+  if (!desc) {
+    // try partial match for routing nodes
+    for (var key in inspDesc) {
+      if (drag.label.indexOf(key) === 0 || key.indexOf(drag.label.replace(/\s\d+$/,'')) === 0) {
+        desc = inspDesc[key]; break;
+      }
+    }
+  }
+  if (!desc) return;
+  tipEl.innerHTML = '<strong>' + drag.label + '</strong>' + desc;
+  tipEl.style.display = 'block';
+  clearTimeout(tipEl._t);
+  tipEl._t = setTimeout(function(){ tipEl.style.display='none'; }, 9000);
+}
+
+// ─── HIDE / SHOW ALL LABELS ──────────────────────────────────────────────────
+var labelsVisible = true;
+var btnLabels = document.getElementById('btn-labels');
+var btnLblText = document.getElementById('lbl-btn-text');
+
+function toggleLabels() {
+  labelsVisible = !labelsVisible;
+  lblEls.forEach(function(lb) {
+    if (labelsVisible) {
+      lb.el.classList.remove('lbl-off');
+    } else {
+      lb.el.classList.add('lbl-off');
+    }
+  });
+  if (labelsVisible) {
+    btnLblText.textContent = '\uD83D\uDC41 Hide All Labels';
+    btnLabels.classList.remove('hidden-mode');
+  } else {
+    btnLblText.textContent = '\uD83D\uDC41 Show All Labels';
+    btnLabels.classList.add('hidden-mode');
+  }
+}
+
+// keyboard shortcut H
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'h' || e.key === 'H') toggleLabels();
+  if (e.key === 'r' || e.key === 'R') resetAllBlocks();
+  if (e.key === 'f' || e.key === 'F') setCamPreset('front');
+  if (e.key === 't' || e.key === 'T') setCamPreset('top');
+  if (e.key === 'b' || e.key === 'B') setCamPreset('btc');
+  if (e.key === 'e' || e.key === 'E') setCamPreset('engine');
+});
 
 // ─── MOUSE EVENTS ─────────────────────────────────────────────────────────────
 cvs.addEventListener('mousedown', function(e) {
